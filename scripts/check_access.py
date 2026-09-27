@@ -1,6 +1,8 @@
 """Read-only PEARP authentication and metadata probe; never log credentials."""
 import os
 import time
+import json
+import re
 from pathlib import Path
 import urllib.request
 import urllib.parse
@@ -24,6 +26,27 @@ def request(member, operation, **params):
                 content = response.read(12_000_001)
             break
         except urllib.error.HTTPError as error:
+            # Only emit numeric gateway codes and predefined classifications;
+            # never print arbitrary response bodies, request headers or tokens.
+            body=error.read(65536).decode('utf-8',errors='replace')
+            try:
+                payload=json.loads(body)
+            except ValueError:
+                payload={}
+            codes=re.findall(r'"code"\s*:\s*"?(\d{3,9})',body)
+            labels=[label for phrase,label in (
+                ('application','application'),('subscription','abonnement'),
+                ('resource','ressource'),('throttl','limitation'),
+                ('quota','quota'),('spike','pic de trafic'),
+                ('invalid','invalide'),('expired','expiration'),
+                ('blocked','blocage'),('too many','trop de requêtes'),
+            ) if phrase in body.lower()]
+            retry=error.headers.get('Retry-After','')
+            print('Diagnostic passerelle : '+json.dumps({
+                'http':error.code,'codes':codes,'classifications':labels,
+                'retry_after_seconds':int(retry) if retry.isdigit() else None,
+                'json_response':bool(payload),
+            },ensure_ascii=False),flush=True)
             if error.code==429 and attempt<2:
                 delay=error.headers.get('Retry-After','60')
                 delay=int(delay) if delay.isdigit() else 60
