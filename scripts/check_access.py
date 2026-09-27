@@ -1,5 +1,6 @@
 """Read-only PEARP authentication and metadata probe; never log credentials."""
 import os
+import time
 from pathlib import Path
 import urllib.request
 import urllib.parse
@@ -17,13 +18,23 @@ def request(member, operation, **params):
     service = f'MF-NWP-GLOBAL-PEARP{member:03d}-025-GLOBE-WCS'
     query = urllib.parse.urlencode(dict(service='WCS', version='2.0.1', **params))
     req = urllib.request.Request(f'{BASE}{service}/{operation}?{query}', headers={'apikey':key})
-    try:
-        with urllib.request.urlopen(req, timeout=60) as response:
-            content = response.read(12_000_001)
-    except urllib.error.HTTPError as error:
-        raise SystemExit(f'{operation} membre {member:03d}: HTTP {error.code}. Aucun secret affiché.') from None
-    except urllib.error.URLError:
-        raise SystemExit('Service Météo-France inaccessible.') from None
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as response:
+                content = response.read(12_000_001)
+            break
+        except urllib.error.HTTPError as error:
+            if error.code==429 and attempt<2:
+                delay=error.headers.get('Retry-After','60')
+                delay=int(delay) if delay.isdigit() else 60
+                if delay>60:
+                    raise SystemExit('Limitation API : délai demandé supérieur à 60 s, arrêt du test.') from None
+                print(f'Limitation API 429 : nouvelle tentative dans {max(delay,30)} s.',flush=True)
+                time.sleep(max(delay,30))
+                continue
+            raise SystemExit(f'{operation} membre {member:03d}: HTTP {error.code}. Aucun secret affiché.') from None
+        except urllib.error.URLError:
+            raise SystemExit('Service Météo-France inaccessible.') from None
     if len(content)>12_000_000:
         raise SystemExit('Métadonnées anormalement volumineuses.')
     root=ET.fromstring(content)
