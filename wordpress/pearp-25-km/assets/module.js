@@ -10,6 +10,7 @@ document.querySelectorAll('[data-pearp]').forEach(async (root,index) => {
   status.textContent='Run '+new Date(manifest.run).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' · 35 membres · '+manifest.commune_count+' communes';
   Object.entries(manifest.products).forEach(([key,spec])=>add($('[data-product]'),key,spec.label));
   manifest.steps.forEach(h=>add($('[data-step]'),h,'H+'+h));
+  if(manifest.steps.includes(24))$('[data-step]').value='24';
   const refresh=()=>{const product=$('[data-product]').value,stat=$('[data-stat]').value,region=$('[data-region]').value,step=$('[data-step]').value;
    const img=$('[data-map]');img.hidden=false;img.src=base+'/maps/'+region+'-'+product+'-'+stat+'-'+step+'.svg';img.alt=manifest.products[product].label+' · '+$('[data-stat]').selectedOptions[0].textContent+' · H+'+step;
    img.onerror=()=>{img.hidden=true;$('[data-period]').textContent='Carte indisponible pour cette sélection.';};
