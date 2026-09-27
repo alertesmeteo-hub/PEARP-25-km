@@ -1,0 +1,61 @@
+name: Produire cartes et tableaux PEARP
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '40 5,11,17,23 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: pearp-publication
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Vérifier code et statistiques
+        run: |
+          python -m unittest discover -s tests
+          php -l wordpress/pearp-25-km/pearp-25-km.php
+          node --check wordpress/pearp-25-km/assets/module.js
+      - name: Extraire les 35 membres et produire les cartes
+        run: python scripts/build_data.py
+      - name: Vérifier publication
+        run: python scripts/validate_data.py
+      - name: Publier seulement après validation complète
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          mkdir -p build/publish
+          cd build/publish
+          git init
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code --heads origin data > /dev/null; then
+            git fetch --depth=1 origin data
+            git checkout -b data FETCH_HEAD
+            python ../../scripts/check_newer.py ../data/index.json index.json
+            git rm -r --ignore-unmatch .
+          else
+            git checkout --orphan data
+          fi
+          cp -a ../data/. .
+          touch .nojekyll
+          git add .
+          git commit -m 'Publication PEARP vérifiée : 35 membres'
+          git push origin HEAD:data
+      - name: ZIP WordPress
+        run: |
+          cd wordpress
+          zip -qr ../build/pearp-25-km-v1.0.0.zip pearp-25-km
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pearp-wordpress
+          path: build/pearp-25-km-v1.0.0.zip

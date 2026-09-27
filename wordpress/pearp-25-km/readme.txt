@@ -1,0 +1,16 @@
+=== PEARP 25 km — Alertes Météo ===
+Stable tag: 1.0.0
+Requires PHP: 7.4
+License: GPLv2 or later
+
+Installation : importer le ZIP dans Extensions > Ajouter, activer, puis utiliser [pearp_meteo].
+
+Version initiale : température à 2 m, vent à 10 m, humidité relative, pression mer, nébulosité totale.
+Cartes France/Europe : moyenne, médiane, percentiles 10 et 90 sur les 35 membres.
+Tableaux des communes de France métropolitaine et Corse : moyenne d'ensemble.
+Échéances H+0, 24, 48, 72, 84, 96, 102. Aucune interpolation horaire.
+Vent affiché au palier supérieur de 5 km/h. Champs sources non arrondis avant les statistiques.
+Les précipitations et rafales ne sont pas incluses dans cette première version.
+Les cartes SVG restent vectorielles au zoom. La grille diffusée est de 0,25°.
+Données Météo-France sous Licence Ouverte Etalab ; contours Natural Earth, domaine public.
+Aucun secret requis ou embarqué dans WordPress. Les fichiers publics sont traités par GitHub Actions.
