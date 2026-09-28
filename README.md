@@ -2,7 +2,13 @@
 
 Extension WordPress : `[pearp_meteo]`.
 
-## Version 1.1.0
+## Version 1.1.1
+
+Le tableau communal est placé en haut du module. Le bouton « Me géolocaliser »
+demande l'autorisation du navigateur sur HTTPS puis recherche localement la
+commune la plus proche dans le catalogue embarqué. Aucun envoi des coordonnées
+au module ni géocodage tiers. Une position à plus de 50 km du catalogue est
+refusée avec maintien de la recherche manuelle. Tests interface : `node tests/test_module.cjs`.
 
 Les données sont issues des fichiers GRIB2 publics officiels Météo-France :
 https://www.data.gouv.fr/datasets/pe-arpege-glob025

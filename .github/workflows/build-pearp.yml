@@ -24,6 +24,7 @@ jobs:
           python -m unittest discover -s tests
           php -l wordpress/pearp-25-km/pearp-25-km.php
           node --check wordpress/pearp-25-km/assets/module.js
+          node tests/test_module.cjs
       - name: Extraire les 35 membres et produire les cartes
         run: python scripts/build_data.py
       - name: Vérifier publication
@@ -54,8 +55,8 @@ jobs:
       - name: ZIP WordPress
         run: |
           cd wordpress
-          zip -qr ../build/pearp-25-km-v1.1.0.zip pearp-25-km
+          zip -qr ../build/pearp-25-km-v1.1.1.zip pearp-25-km
       - uses: actions/upload-artifact@v4
         with:
           name: pearp-wordpress
-          path: build/pearp-25-km-v1.1.0.zip
+          path: build/pearp-25-km-v1.1.1.zip
