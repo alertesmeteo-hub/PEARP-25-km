@@ -46,7 +46,7 @@ def read_range(session,url,start,count,total):
     raise ValueError('Public source unavailable')
 
 def metadata(header):
-    if header[:4]!=b'GRIB' or header[7]!=2:raise ValueError('Invalid GRIB2')
+    if len(header)<16 or header[:4]!=b'GRIB' or header[7]!=2:raise ValueError('Invalid GRIB2')
     result={'length':int.from_bytes(header[8:16],'big'),'discipline':header[6]}
     pos=16
     while pos+5<=len(header):
