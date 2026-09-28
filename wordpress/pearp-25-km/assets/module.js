@@ -18,7 +18,7 @@ document.querySelectorAll('[data-pearp]').forEach(async (root,index) => {
    const end=Date.parse(manifest.run)+Number(step)*3600000,format=t=>new Date(t).toLocaleString('fr-FR',{timeZone:'Europe/Paris'});
    $('[data-period]').textContent=spec.period?'Période : '+format(spec.period==='run'?Date.parse(manifest.run):end-spec.period*3600000)+' → '+format(end):'Validité : '+format(end);};
   ['region','product','stat','step'].forEach(key=>$('[data-'+key+']').addEventListener('change',refresh));
-  $('[data-zoom]').addEventListener('input',event=>$('[data-map]').style.width=(Number(event.target.value)*100)+'%');refresh();
+  $('[data-zoom]').addEventListener('input',event=>$('[data-map]').style.width='calc(min(100%, 560px, 65vh) * '+Number(event.target.value)+')');refresh();
   const cities=await load('communes.json'), list=$('datalist');list.id='pearp-cities-'+index;$('[data-city]').setAttribute('list',list.id);
   const search=()=>{list.replaceChildren();const query=$('[data-city]').value.toLocaleLowerCase('fr');if(query.length<2)return;cities.filter(c=>(c[1]+' '+c[0]).toLocaleLowerCase('fr').includes(query)).slice(0,40).forEach(c=>add(list,c[1]+' ('+c[0]+')',c[1]+' ('+c[0]+')'));};
   $('[data-city]').addEventListener('input',search);
@@ -27,7 +27,7 @@ document.querySelectorAll('[data-pearp]').forEach(async (root,index) => {
    $('[data-head]').replaceChildren();$('[data-body]').replaceChildren();
    $('[data-city-status]').textContent='Chargement…';const dep=await load('departements/'+c[2]+'.json');const commune=dep.communes.find(row=>row[0]===c[0]);if(!commune)throw Error('Commune absente de la publication.');
    if(id!==requestId)return;
-   $('[data-head]').replaceChildren();$('[data-body]').replaceChildren();const hr=document.createElement('tr');['Validité',...Object.values(manifest.products).map(p=>p.label)].forEach(label=>{const th=document.createElement('th');th.textContent=label;hr.append(th);});$('[data-head]').append(hr);
+   $('[data-head]').replaceChildren();$('[data-body]').replaceChildren();const hr=document.createElement('tr'),shortLabels={precipitation:'Cumul (mm)',rafales:'Rafales 3 h',temperature:'T° à 2 m',vent:'Vent 10 m',nuages:'Nuages',humidity:'Humidité',pressure:'Pression'};const dateHead=document.createElement('th');dateHead.textContent='Validité';hr.append(dateHead);Object.entries(manifest.products).forEach(([key,p])=>{const th=document.createElement('th');th.textContent=shortLabels[key]||p.label;th.title=p.label+' ('+p.unit+')';hr.append(th);});$('[data-head]').append(hr);
    dep.forecast.forEach(([date,rows])=>{const tr=document.createElement('tr'),td=document.createElement('td');td.textContent=new Date(date).toLocaleString('fr-FR',{timeZone:'Europe/Paris'});tr.append(td);Object.values(manifest.products).forEach(p=>{const cell=document.createElement('td');cell.textContent=number(rows[commune[6]][p.column],p.unit);tr.append(cell);});$('[data-body]').append(tr);});
    $('[data-city-status]').textContent=c[1]+' · maille la plus proche · moyenne des 35 membres';
   }catch(error){if(id===requestId)$('[data-city-status]').textContent=error.message;}};

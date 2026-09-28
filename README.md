@@ -2,7 +2,7 @@
 
 Extension WordPress : `[pearp_meteo]`.
 
-## Version 1.1.1
+## Version 1.1.2
 
 Le tableau communal est placé en haut du module. Le bouton « Me géolocaliser »
 demande l'autorisation du navigateur sur HTTPS puis recherche localement la
