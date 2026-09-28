@@ -1,8 +1,9 @@
 import sys
 import unittest
+from unittest.mock import Mock,patch
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-from public_source import metadata
+from public_source import metadata,complete_catalog,HOST
 
 class MetadataTests(unittest.TestCase):
     def test_ensemble_product(self):
@@ -25,3 +26,27 @@ class MetadataTests(unittest.TestCase):
         self.assertEqual(result['member'],34)
         s[44]=2
         with self.assertRaises(ValueError):metadata(h+s)
+
+class CatalogFallbackTests(unittest.TestCase):
+    def test_listing_keeps_only_grib_files_in_requested_run(self):
+        prefix='prod/data/arpege/glob025/202609271800/'
+        filename='PEARP_202609271800_24:00.grib'
+        xml=f'''<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+          <IsTruncated>false</IsTruncated>
+          <Contents><Key>{prefix}{filename}</Key><Size>123456</Size></Contents>
+          <Contents><Key>another-run/file.grib</Key><Size>1</Size></Contents>
+          <Contents><Key>{prefix}notes.txt</Key><Size>1</Size></Contents>
+        </ListBucketResult>'''
+        response=Mock(content=xml.encode())
+        with patch('public_source.requests.Session') as session:
+            session.return_value.get.return_value=response
+            result=complete_catalog([{'url':HOST+prefix+filename}])
+            session.return_value.get.assert_called_once_with(HOST,params={'prefix':prefix,'max-keys':150},timeout=30)
+        self.assertEqual(result,[{'title':filename,'url':HOST+prefix+filename,'filesize':123456}])
+
+    def test_truncated_listing_is_rejected(self):
+        response=Mock(content=b'<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><IsTruncated>true</IsTruncated></ListBucketResult>')
+        with patch('public_source.requests.Session') as session:
+            session.return_value.get.return_value=response
+            with self.assertRaises(ValueError):
+                complete_catalog([{'url':HOST+'prod/data/arpege/glob025/202609271800/file.grib'}])
