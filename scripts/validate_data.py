@@ -13,10 +13,12 @@ for path in departments:
     data=json.loads(path.read_text(encoding='utf-8'));count+=len(data['communes'])
     assert len(data['forecast'])==len(manifest['steps'])
     for city in data['communes']:assert 0<=city[6]<len(data['points'])
-    for date,rows in data['forecast']:
+    for step,(date,rows) in zip(manifest['steps'],data['forecast']):
         assert len(rows)==len(data['points'])
         for row in rows:
             assert len(row)==33
-            for product in manifest['products'].values():assert isinstance(row[product['column']],(int,float))
+            for product in manifest['products'].values():
+                if step not in product.get('steps',manifest['steps']):assert row[product['column']] is None
+                else:assert isinstance(row[product['column']],(int,float))
 assert count==manifest['commune_count']
 print(f'Publication validée : {count} communes, 96 départements, {manifest["maps"]} cartes vectorielles.')

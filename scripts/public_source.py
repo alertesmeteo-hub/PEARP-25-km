@@ -40,6 +40,9 @@ def metadata(header):
                 time_unit=s[17],lead=int.from_bytes(s[18:22],'big'),
                 level_type=s[22],level_scale=s[23],level_value=int.from_bytes(s[24:28],'big'))
             if template in (1,11):result.update(member=s[35],ensemble_size=s[36])
+            if template==11:
+                if len(s)<61 or s[44]!=1:raise ValueError('Unsupported statistical time ranges')
+                result.update(statistical_process=s[49],range_unit=s[51],range_length=int.from_bytes(s[52:56],'big'))
             return result
         pos+=size
     raise ValueError('Product metadata not found in prefix')

@@ -2,7 +2,7 @@
 
 Extension WordPress : `[pearp_meteo]`.
 
-## Version initiale 1.0.0
+## Version 1.1.0
 
 Les données sont issues des fichiers GRIB2 publics officiels Météo-France :
 https://www.data.gouv.fr/datasets/pe-arpege-glob025
@@ -20,8 +20,13 @@ l'API WCS limitée ni du secret configuré pour les tests d'accès.
   départemental v3 à 33 colonnes, colonnes non produites laissées à null.
 - Vent : moyenne des vitesses scalaires de chaque membre, pas norme du vent
   vectoriel moyen ; affichage arrondi au palier supérieur de 5 km/h.
-- Précipitations et rafales non incluses dans cette version : leurs conventions
-  GRIB nécessitent une validation supplémentaire.
+- Précipitations totales depuis le run : quatre composantes (pluie et neige
+  stratiformes/convectives), en mm d'équivalent eau. Pas un taux horaire.
+- Rafales à 10 m : norme U/V sur les trois heures précédant l'échéance,
+  convertie en km/h AVANT les statistiques d'ensemble. Pas un maximum depuis
+  le run. H+0 indisponible. Conventions vérifiées : `config/interval-fields.md`.
+- 384 cartes SVG : 7 paramètres, 4 statistiques, 2 domaines et 7 échéances,
+  sauf les rafales à H+0. Marges blanches réduites.
 
 Les statistiques ne sont ni un scénario individuel ni des observations.
 Le percentile n'est pas une garantie de réalisation. « 25 km » est un nom de

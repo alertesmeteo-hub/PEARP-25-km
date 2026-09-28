@@ -11,10 +11,12 @@ document.querySelectorAll('[data-pearp]').forEach(async (root,index) => {
   Object.entries(manifest.products).forEach(([key,spec])=>add($('[data-product]'),key,spec.label));
   manifest.steps.forEach(h=>add($('[data-step]'),h,'H+'+h));
   if(manifest.steps.includes(24))$('[data-step]').value='24';
-  const refresh=()=>{const product=$('[data-product]').value,stat=$('[data-stat]').value,region=$('[data-region]').value,step=$('[data-step]').value;
+  const refresh=()=>{const product=$('[data-product]').value,stat=$('[data-stat]').value,region=$('[data-region]').value;
+   const spec=manifest.products[product],allowed=spec.steps||manifest.steps,oldStep=Number($('[data-step]').value);$('[data-step]').replaceChildren();allowed.forEach(h=>add($('[data-step]'),h,'H+'+h));$('[data-step]').value=String(allowed.includes(oldStep)?oldStep:allowed[0]);const step=$('[data-step]').value;
    const img=$('[data-map]');img.hidden=false;img.src=base+'/maps/'+region+'-'+product+'-'+stat+'-'+step+'.svg';img.alt=manifest.products[product].label+' · '+$('[data-stat]').selectedOptions[0].textContent+' · H+'+step;
    img.onerror=()=>{img.hidden=true;$('[data-period]').textContent='Carte indisponible pour cette sélection.';};
-   $('[data-period]').textContent='Validité : '+new Date(Date.parse(manifest.run)+Number(step)*3600000).toLocaleString('fr-FR',{timeZone:'Europe/Paris'});};
+   const end=Date.parse(manifest.run)+Number(step)*3600000,format=t=>new Date(t).toLocaleString('fr-FR',{timeZone:'Europe/Paris'});
+   $('[data-period]').textContent=spec.period?'Période : '+format(spec.period==='run'?Date.parse(manifest.run):end-spec.period*3600000)+' → '+format(end):'Validité : '+format(end);};
   ['region','product','stat','step'].forEach(key=>$('[data-'+key+']').addEventListener('change',refresh));
   $('[data-zoom]').addEventListener('input',event=>$('[data-map]').style.width=(Number(event.target.value)*100)+'%');refresh();
   const cities=await load('communes.json'), list=$('datalist');list.id='pearp-cities-'+index;$('[data-city]').setAttribute('list',list.id);
