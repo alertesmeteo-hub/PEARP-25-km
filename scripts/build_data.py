@@ -8,7 +8,7 @@ import re
 import requests
 import numpy as np
 from eccodes import codes_new_from_message,codes_get,codes_get_values,codes_release
-from public_source import CATALOG,inventory,read_range
+from public_source import CATALOG,inventory,read_range,complete_catalog
 from ensemble import statistics
 from render_maps import PRODUCTS,REGIONS,render
 from interval_fields import INTERVAL_SIGNATURES,matching_interval,validate_interval,precipitation_total,gust_speed
@@ -102,7 +102,12 @@ def extract_step(run,step,resource):
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--output',default='build/data');args=parser.parse_args()
     response=requests.get(CATALOG,timeout=30);response.raise_for_status()
-    run,resources=select_resources(response.json()['resources']);print('Run sélectionné: '+run,flush=True)
+    catalog=response.json()['resources']
+    try:run,resources=select_resources(catalog)
+    except ValueError:
+        print('Catalogue en transition : vérification des fichiers dans le stockage officiel.',flush=True)
+        run,resources=select_resources(complete_catalog(catalog))
+    print('Run sélectionné: '+run,flush=True)
     run_dt=datetime.strptime(run,'%Y%m%d%H').replace(tzinfo=timezone.utc)
     with ThreadPoolExecutor(max_workers=3) as executor:
         futures={h:executor.submit(extract_step,run,h,resources[h]) for h in STEPS}

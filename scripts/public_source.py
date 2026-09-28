@@ -5,9 +5,31 @@ import struct
 import time
 from pathlib import Path
 import requests
+import xml.etree.ElementTree as ET
+import re
 
 CATALOG='https://www.data.gouv.fr/api/1/datasets/pe-arpege-glob025/'
 HOST='https://meteofrance-pe.s3.rbx.io.cloud.ovh.net/'
+
+def complete_catalog(resources):
+    """Read bounded official bucket listings for runs already in the catalog.
+
+    data.gouv replaces resources individually, temporarily mixing two runs.
+    Immutable files for the previous run remain in the public bucket.
+    """
+    runs=sorted({m[1] for resource in resources if (m:=re.search(r'/(\d{12})/',resource['url']))},reverse=True)[:2]
+    session=requests.Session();result=[]
+    ns={'s':'http://s3.amazonaws.com/doc/2006-03-01/'}
+    for run in runs:
+        prefix=f'prod/data/arpege/glob025/{run}/'
+        response=session.get(HOST,params={'prefix':prefix,'max-keys':150},timeout=30)
+        response.raise_for_status();root=ET.fromstring(response.content)
+        if root.findtext('s:IsTruncated',namespaces=ns)!='false':raise ValueError('Bucket listing truncated')
+        for item in root.findall('s:Contents',ns):
+            key=item.findtext('s:Key',namespaces=ns)
+            if not key.startswith(prefix) or not key.endswith('.grib'):continue
+            result.append({'title':key.rsplit('/',1)[1],'url':HOST+key,'filesize':int(item.findtext('s:Size',namespaces=ns))})
+    return result
 
 def read_range(session,url,start,count,total):
     if not url.startswith(HOST):raise ValueError('Untrusted GRIB host')
