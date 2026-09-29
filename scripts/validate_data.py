@@ -10,8 +10,10 @@ departments=list((root/'departements').glob('*.json'))
 assert len(departments)==96
 count=0
 for path in departments:
-    data=json.loads(path.read_text(encoding='utf-8'));count+=len(data['communes'])
+    data=json.loads(path.read_text(encoding='utf-8'));count+=len(data['communes']);assert data['schema_version']==4
     assert len(data['forecast'])==len(manifest['steps'])
+    assert set(data['forecast_statistics'])=={'median','p10','p90'}
+    assert all(len(items)==len(manifest['steps']) for items in data['forecast_statistics'].values())
     for city in data['communes']:assert 0<=city[6]<len(data['points'])
     for step,(date,rows) in zip(manifest['steps'],data['forecast']):
         assert len(rows)==len(data['points'])

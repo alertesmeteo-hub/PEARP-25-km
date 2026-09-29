@@ -135,22 +135,26 @@ def main():
                 lookup[iy,ix]=len(points);points.append([int(IY[iy]*1440+IX[ix]),float(LAT[iy]),float(LON[ix]),None])
             rows.append([c[0],c[1],c[3],c[4],c[5],c[6],lookup[iy,ix]])
             city_list.append([c[0],c[1],dep])
-        forecast=[]
-        for step in STEPS:
-            values=[]
-            for iy,ix in lookup:
-                row=[None]*33
-                for product,spec in PRODUCTS.items():
-                    if product in results[step]:row[spec['column']]=round(float(results[step][product]['mean'][iy,ix]),2)
-                values.append(row)
-            forecast.append([(run_dt+timedelta(hours=step)).isoformat(),values])
-        payload={'schema_version':3,'columns':schema,'department':dep,'points':points,'communes':rows,'forecast':forecast,'statistic':'mean','members':35}
+        forecasts={}
+        for stat in ('mean','median','p10','p90'):
+            forecast=[]
+            for step in STEPS:
+                values=[]
+                for iy,ix in lookup:
+                    row=[None]*33
+                    for product,spec in PRODUCTS.items():
+                        if product in results[step]:row[spec['column']]=round(float(results[step][product][stat][iy,ix]),2)
+                    values.append(row)
+                forecast.append([(run_dt+timedelta(hours=step)).isoformat(),values])
+            forecasts[stat]=forecast
+        payload={'schema_version':4,'columns':schema,'department':dep,'points':points,'communes':rows,'forecast':forecasts['mean'],'forecast_statistics':{key:value for key,value in forecasts.items() if key!='mean'},'statistic':'mean','members':35}
         (output/'departements'/f'{dep}.json').write_text(json.dumps(payload,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
     (output/'communes.json').write_text(json.dumps(city_list,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
-    manifest={'status':'ok','version':'1.1.0','members':35,'run':run_dt.isoformat(),'steps':STEPS,'products':PRODUCTS,'commune_count':len(city_list),
+    manifest={'status':'ok','version':'1.2.0','members':35,'run':run_dt.isoformat(),'steps':STEPS,'products':PRODUCTS,'commune_count':len(city_list),
         'generated_at':datetime.now(timezone.utc).isoformat(),'maps':sum(len(result) for result in results.values())*4*2,
         'limitations':'Échéances sans interpolation. Précipitations totales depuis le run, pluie et neige en équivalent eau. Rafales maximales sur les 3 heures précédant chaque échéance, indisponibles à H+0 : pas un maximum depuis le run.'}
     (output/'index.json').write_text(json.dumps(manifest,ensure_ascii=False),encoding='utf-8')
     print(json.dumps(manifest,ensure_ascii=False),flush=True)
 
 if __name__=='__main__':main()
+
