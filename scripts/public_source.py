@@ -5,6 +5,7 @@ import struct
 import time
 from pathlib import Path
 import requests
+from urllib3.exceptions import ProtocolError
 import xml.etree.ElementTree as ET
 import re
 
@@ -34,15 +35,21 @@ def complete_catalog(resources):
 def read_range(session,url,start,count,total):
     if not url.startswith(HOST):raise ValueError('Untrusted GRIB host')
     end=min(start+count,total)-1
-    for attempt in range(3):
-        with session.get(url,headers={'Range':f'bytes={start}-{end}'},stream=True,timeout=(15,60)) as r:
-            if r.status_code in (429,500,502,503,504) and attempt<2:
-                time.sleep(5*(attempt+1));continue
-            if r.status_code!=206 or r.headers.get('Content-Range')!=f'bytes {start}-{end}/{total}':
-                raise ValueError(f'Invalid range response: HTTP {r.status_code}')
-            data=r.raw.read(end-start+2)
-        if len(data)!=end-start+1:raise ValueError('Truncated range')
-        return data
+    for attempt in range(4):
+        try:
+            with session.get(url,headers={'Range':f'bytes={start}-{end}'},stream=True,timeout=(15,60)) as r:
+                if r.status_code in (429,500,502,503,504):
+                    if attempt==3:raise ValueError(f'Public source unavailable: HTTP {r.status_code}')
+                    time.sleep(15*(attempt+1));continue
+                if r.status_code!=206 or r.headers.get('Content-Range')!=f'bytes {start}-{end}/{total}':
+                    raise ValueError(f'Invalid range response: HTTP {r.status_code}')
+                data=r.raw.read(end-start+2)
+            if len(data)!=end-start+1:raise ProtocolError('Truncated range')
+            return data
+        except (requests.RequestException,OSError,ProtocolError) as error:
+            if attempt==3:raise ValueError('Public source unavailable after four attempts') from error
+            print(f'Connexion source interrompue, reprise dans {15*(attempt+1)} s.',flush=True)
+            time.sleep(15*(attempt+1))
     raise ValueError('Public source unavailable')
 
 def metadata(header):
