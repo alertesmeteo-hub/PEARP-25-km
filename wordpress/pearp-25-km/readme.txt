@@ -1,10 +1,11 @@
 === PEARP 25 km — Alertes Météo ===
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 Requires PHP: 7.4
 License: GPLv2 or later
 
 Installation : importer le ZIP dans Extensions > Ajouter, activer, puis utiliser [pearp_meteo].
 
+1.1.3 : tableau complet et mobile, dates renforcées, statistique visible, humidité/pression entières et température arrondie en plage.
 1.1.2 : tableau communal en haut, recherche par nom ou code INSEE et bouton Me géolocaliser.
 Géolocalisation à la demande sur HTTPS, avec autorisation du navigateur. Coordonnées traitées localement, sans transmission au module météo. Zone : métropole et Corse ; refus au-delà de 50 km de la commune la plus proche. Aucun service de géocodage externe.
 
