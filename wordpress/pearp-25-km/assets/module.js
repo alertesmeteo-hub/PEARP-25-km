@@ -9,6 +9,7 @@ document.querySelectorAll('[data-pearp]').forEach(async (root,index) => {
   const manifest=await load('index.json');
   if(manifest.members!==35||manifest.status!=='ok')throw Error('Publication PEARP incomplète.');
   status.textContent='Run '+new Date(manifest.run).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' · 35 membres · '+manifest.commune_count+' communes';
+  const limitations=$('[data-limitations]');if(limitations)limitations.textContent=manifest.limitations||'Échéances publiées sans interpolation.';
   Object.entries(manifest.products).forEach(([key,spec])=>add($('[data-product]'),key,spec.label));
   const mapSteps=manifest.map_steps||manifest.steps;mapSteps.forEach(h=>add($('[data-step]'),h,'H+'+h));
   if(mapSteps.includes(24))$('[data-step]').value='24';

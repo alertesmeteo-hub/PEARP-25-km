@@ -38,7 +38,7 @@ add_shortcode('pearp_meteo', function () {
       </div>
       <p data-period></p>
       <div class="pearp-map"><img data-map alt="Carte PEARP" hidden></div>
-      <p class="pearp-note">Tableau horaire complet de H+0 à H+102, sans interpolation. Les cartes restent proposées aux 7 échéances principales. Précipitations totales depuis le run : pluie et neige en équivalent eau (mm). Rafales indisponibles à H+0, maximales sur 1 heure à H+1, 2 heures à H+2, puis sur les 3 heures précédentes. La moyenne des rafales des 35 membres n’est pas leur maximum absolu.</p>
+      <p class="pearp-note" data-limitations>Chargement des informations sur les échéances…</p>
       <footer><p>Alertes-meteo.com</p><p>Source : Météo-France · Licence Ouverte Etalab. Module PEARP v1.3.0.</p></footer>
     </section>
     <?php return ob_get_clean();
