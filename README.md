@@ -2,7 +2,7 @@
 
 Extension WordPress : `[pearp_meteo]`.
 
-## Version 1.1.2
+## Version 1.2.2
 
 Le tableau communal est placé en haut du module. Le bouton « Me géolocaliser »
 demande l'autorisation du navigateur sur HTTPS puis recherche localement la
@@ -21,7 +21,8 @@ l'API WCS limitée ni du secret configuré pour les tests d'accès.
 - Cartes SVG France et Europe : température à 2 m, vent à 10 m, humidité à 2 m,
   pression mer et nébulosité totale.
 - Moyenne, médiane, percentiles 10 et 90 calculés sur les 35 membres.
-- Échéances H+0, 24, 48, 72, 84, 96 et 102 ; pas d'interpolation horaire.
+- Tableau avec jour fusionné et heure séparée. Sept échéances sont extraites :
+  H+0, 24, 48, 72, 84, 96 et 102, sans interpolation entre elles.
 - Tableaux communaux métropole et Corse : moyenne d'ensemble, format
   départemental v3 à 33 colonnes, colonnes non produites laissées à null.
 - Vent : moyenne des vitesses scalaires de chaque membre, pas norme du vent

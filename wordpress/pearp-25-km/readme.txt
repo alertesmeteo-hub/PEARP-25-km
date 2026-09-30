@@ -1,10 +1,11 @@
 === PEARP 25 km — Alertes Météo ===
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 Requires PHP: 7.4
 License: GPLv2 or later
 
 Installation : importer le ZIP dans Extensions > Ajouter, activer, puis utiliser [pearp_meteo].
 
+1.2.2 : jour fusionné et heure séparée dans le tableau, avec précision des 7 échéances extraites.
 1.2.1 : carte agrandie, affichage mobile renforcé et signature simplifiée.
 1.2.0 : tableau complet et mobile, dates renforcées, statistique visible, humidité/pression entières et température arrondie en plage.
 1.1.2 : tableau communal en haut, recherche par nom ou code INSEE et bouton Me géolocaliser.
