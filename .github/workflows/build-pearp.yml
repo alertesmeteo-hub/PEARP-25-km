@@ -1,6 +1,13 @@
 name: Produire cartes et tableaux PEARP
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'config/**'
+      - 'tests/**'
+      - '.github/workflows/build-pearp.yml'
   schedule:
     - cron: '40 5,11,17,23 * * *'
 permissions:
@@ -11,7 +18,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -55,8 +62,8 @@ jobs:
       - name: ZIP WordPress
         run: |
           cd wordpress
-          zip -qr ../build/pearp-25-km-v1.2.2.zip pearp-25-km
+          zip -qr ../build/pearp-25-km-v1.3.0.zip pearp-25-km
       - uses: actions/upload-artifact@v4
         with:
           name: pearp-wordpress
-          path: build/pearp-25-km-v1.2.2.zip
+          path: build/pearp-25-km-v1.3.0.zip

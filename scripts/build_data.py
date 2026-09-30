@@ -13,7 +13,8 @@ from ensemble import statistics
 from render_maps import PRODUCTS,REGIONS,render
 from interval_fields import INTERVAL_SIGNATURES,matching_interval,validate_interval,precipitation_total,gust_speed
 
-STEPS=[0,24,48,72,84,96,102]
+STEPS=list(range(103))
+MAP_STEPS=[0,24,48,72,84,96,102]
 SIGNATURES={
  'temperature':(0,0,103,2),'u':(2,2,103,10),'v':(2,3,103,10),
  'nuages':(6,1,1,0),'humidity':(1,1,103,2),'pressure':(3,1,101,0),
@@ -32,7 +33,7 @@ def select_resources(resources):
     return run,{h:runs[run][h] for h in STEPS}
 
 def extract_step(run,step,resource):
-    cache=Path('build/cache')/f'{run}-{step}-v2.json';cache.parent.mkdir(parents=True,exist_ok=True)
+    cache=Path('build/cache')/f'{run}-{step}-v3.json';cache.parent.mkdir(parents=True,exist_ok=True)
     if cache.exists():
         index=json.loads(cache.read_text())
         if index['resource']['url']!=resource['url'] or index['resource']['filesize']!=resource['filesize']:
@@ -109,11 +110,12 @@ def main():
         run,resources=select_resources(complete_catalog(catalog))
     print('Run sélectionné: '+run,flush=True)
     run_dt=datetime.strptime(run,'%Y%m%d%H').replace(tzinfo=timezone.utc)
-    with ThreadPoolExecutor(max_workers=3) as executor:
+    with ThreadPoolExecutor(max_workers=8) as executor:
         futures={h:executor.submit(extract_step,run,h,resources[h]) for h in STEPS}
         results={h:futures[h].result() for h in STEPS}
     output=Path(args.output);output.mkdir(parents=True,exist_ok=True)
-    for step,result in results.items():
+    for step in MAP_STEPS:
+        result=results[step]
         for product,stats in result.items():
             for stat,values in stats.items():
                 for region in REGIONS:
@@ -124,7 +126,8 @@ def main():
         if c[2] in ('2A','2B') or (c[2].isdigit() and 1<=int(c[2])<=95 and c[2]!='20'):
             departments.setdefault(c[2],[]).append(c)
     if len(departments)!=96 or sum(map(len,departments.values()))<34000:raise ValueError('Catalogue France incomplet')
-    schema=json.loads(Path('config/reference-schema.json').read_text())
+    reference_schema=json.loads(Path('config/reference-schema.json').read_text())
+    schema=[reference_schema[index] for index in (0,1,3,4,6,7,12)]
     (output/'departements').mkdir(exist_ok=True)
     city_list=[]
     for dep,cities in departments.items():
@@ -141,18 +144,18 @@ def main():
             for step in STEPS:
                 values=[]
                 for iy,ix in lookup:
-                    row=[None]*33
+                    row=[None]*len(schema)
                     for product,spec in PRODUCTS.items():
                         if product in results[step]:row[spec['column']]=round(float(results[step][product][stat][iy,ix]),2)
                     values.append(row)
                 forecast.append([(run_dt+timedelta(hours=step)).isoformat(),values])
             forecasts[stat]=forecast
-        payload={'schema_version':4,'columns':schema,'department':dep,'points':points,'communes':rows,'forecast':forecasts['mean'],'forecast_statistics':{key:value for key,value in forecasts.items() if key!='mean'},'statistic':'mean','members':35}
+        payload={'schema_version':5,'columns':schema,'department':dep,'points':points,'communes':rows,'forecast':forecasts['mean'],'forecast_statistics':{key:value for key,value in forecasts.items() if key!='mean'},'statistic':'mean','members':35}
         (output/'departements'/f'{dep}.json').write_text(json.dumps(payload,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
     (output/'communes.json').write_text(json.dumps(city_list,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
-    manifest={'status':'ok','version':'1.2.0','members':35,'run':run_dt.isoformat(),'steps':STEPS,'products':PRODUCTS,'commune_count':len(city_list),
-        'generated_at':datetime.now(timezone.utc).isoformat(),'maps':sum(len(result) for result in results.values())*4*2,
-        'limitations':'Échéances sans interpolation. Précipitations totales depuis le run, pluie et neige en équivalent eau. Rafales maximales sur les 3 heures précédant chaque échéance, indisponibles à H+0 : pas un maximum depuis le run.'}
+    manifest={'status':'ok','version':'1.3.0','members':35,'run':run_dt.isoformat(),'steps':STEPS,'map_steps':MAP_STEPS,'products':PRODUCTS,'commune_count':len(city_list),
+        'generated_at':datetime.now(timezone.utc).isoformat(),'maps':sum(len(results[step]) for step in MAP_STEPS)*4*2,
+        'limitations':'Tableau horaire H+0 à H+102, sans interpolation. Cartes aux 7 échéances principales. Précipitations totales depuis le run, pluie et neige en équivalent eau. Rafales maximales sur la période disponible, une heure à H+1, deux heures à H+2 puis trois heures, indisponibles à H+0.'}
     (output/'index.json').write_text(json.dumps(manifest,ensure_ascii=False),encoding='utf-8')
     print(json.dumps(manifest,ensure_ascii=False),flush=True)
 

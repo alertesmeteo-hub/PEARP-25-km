@@ -23,8 +23,10 @@ On sélectionne uniquement les paires à processus statistique 2 (maximum)
 portant sur les trois heures précédant l'échéance. Le fichier H+24 contient
 aussi des champs sur une heure, explicitement exclus de cette sélection.
 Les deux composantes ont la même période et le même membre. Conversion en
-km/h par multiplication par 3,6. H+0 n'a pas de rafale sur trois heures : null,
-pas de carte ni de zéro artificiel. Ce n'est pas le maximum depuis le run.
+km/h par multiplication par 3,6. À H+1 la période vaut 1 heure, à H+2 elle vaut
+2 heures, puis elle vaut 3 heures à partir de H+3. H+0 n'a pas de période de
+rafale : null, pas de carte ni de zéro artificiel. Ce n'est pas le maximum
+depuis le run.
 
 Les statistiques d'ensemble sont calculées APRÈS la somme des précipitations
 ou le module de la rafale, indépendamment pour chacun des 35 membres.

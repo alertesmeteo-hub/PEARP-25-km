@@ -8,13 +8,13 @@ import shapefile
 
 REGIONS={'france':(-6,10.5,41,52),'europe':(-25,45,30,72)}
 PRODUCTS={
- 'precipitation':{'label':'Précipitations totales depuis le run (équivalent eau)','unit':'mm','column':12,'period':'run','levels':[0,.1,1,2,5,10,20,30,50,75,100,150,200,300]},
- 'rafales':{'label':'Rafales maximales sur les 3 dernières heures','unit':'km/h','column':6,'period':3,'steps':[24,48,72,84,96,102],'levels':list(range(0,185,5))},
+ 'precipitation':{'label':'Précipitations totales depuis le run (équivalent eau)','unit':'mm','column':6,'period':'run','levels':[0,.1,1,2,5,10,20,30,50,75,100,150,200,300]},
+ 'rafales':{'label':'Rafales maximales sur les 3 dernières heures','unit':'km/h','column':4,'period':3,'map_steps':[24,48,72,84,96,102],'levels':list(range(0,185,5))},
  'temperature':{'label':'Température à 2 m','unit':'°C','column':0,'levels':list(range(-30,43,3))},
- 'vent':{'label':'Vent à 10 m','unit':'km/h','column':4,'levels':list(range(0,125,5))},
- 'nuages':{'label':'Nébulosité totale','unit':'%','column':3,'levels':list(range(0,110,10))},
+ 'vent':{'label':'Vent à 10 m','unit':'km/h','column':3,'levels':list(range(0,125,5))},
+ 'nuages':{'label':'Nébulosité totale','unit':'%','column':2,'levels':list(range(0,110,10))},
  'humidity':{'label':'Humidité relative à 2 m','unit':'%','column':1,'levels':list(range(0,110,10))},
- 'pressure':{'label':'Pression au niveau de la mer','unit':'hPa','column':7,'levels':list(range(950,1055,5))},
+ 'pressure':{'label':'Pression au niveau de la mer','unit':'hPa','column':5,'levels':list(range(950,1055,5))},
 }
 LABELS={'mean':'Moyenne','median':'Médiane','p10':'Percentile 10','p90':'Percentile 90'}
 

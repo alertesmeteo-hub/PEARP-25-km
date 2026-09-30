@@ -13,6 +13,9 @@ class IntervalTests(unittest.TestCase):
         r.update(range_length=1,lead=23)
         self.assertFalse(matching_interval(r,'gust_u',24))
         self.assertFalse(matching_interval(r,'gust_u',0))
+    def test_gust_uses_available_period_at_first_hours(self):
+        self.assertTrue(matching_interval({'template':11,'statistical_process':2,'range_unit':1,'range_length':1,'lead':0},'gust_u',1))
+        self.assertTrue(matching_interval({'template':11,'statistical_process':2,'range_unit':1,'range_length':2,'lead':0},'gust_u',2))
     def test_accumulation_not_rate(self):
         values=precipitation_total([np.array([1.]),np.array([2.]),np.array([3.]),np.array([4.])])
         self.assertEqual(values[0],10.)
@@ -32,3 +35,5 @@ class IntervalTests(unittest.TestCase):
         validate_interval(values,lambda h,k:h[k],'gust_u',24)
         values['endStep']=48
         with self.assertRaises(ValueError):validate_interval(values,lambda h,k:h[k],'gust_u',24)
+        early={'productDefinitionTemplateNumber':11,'typeOfStatisticalProcessing':2,'startStep':0,'endStep':1,'indicatorOfUnitForTimeRange':1,'lengthOfTimeRange':1,'stepType':'max','units':'m s**-1'}
+        validate_interval(early,lambda h,k:h[k],'gust_u',1)

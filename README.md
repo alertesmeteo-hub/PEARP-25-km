@@ -2,7 +2,7 @@
 
 Extension WordPress : `[pearp_meteo]`.
 
-## Version 1.2.2
+## Version 1.3.0
 
 Le tableau communal est placé en haut du module. Le bouton « Me géolocaliser »
 demande l'autorisation du navigateur sur HTTPS puis recherche localement la
@@ -21,17 +21,18 @@ l'API WCS limitée ni du secret configuré pour les tests d'accès.
 - Cartes SVG France et Europe : température à 2 m, vent à 10 m, humidité à 2 m,
   pression mer et nébulosité totale.
 - Moyenne, médiane, percentiles 10 et 90 calculés sur les 35 membres.
-- Tableau avec jour fusionné et heure séparée. Sept échéances sont extraites :
-  H+0, 24, 48, 72, 84, 96 et 102, sans interpolation entre elles.
-- Tableaux communaux métropole et Corse : moyenne d'ensemble, format
-  départemental v3 à 33 colonnes, colonnes non produites laissées à null.
+- Tableau avec jour fusionné, heure séparée et 103 échéances horaires de H+0
+  à H+102. Les cartes restent produites à H+0, 24, 48, 72, 84, 96 et 102.
+- Tableaux communaux métropole et Corse : moyenne, médiane et percentiles,
+  format départemental compact v5 à 7 colonnes météo.
 - Vent : moyenne des vitesses scalaires de chaque membre, pas norme du vent
   vectoriel moyen ; affichage arrondi au palier supérieur de 5 km/h.
 - Précipitations totales depuis le run : quatre composantes (pluie et neige
   stratiformes/convectives), en mm d'équivalent eau. Pas un taux horaire.
-- Rafales à 10 m : norme U/V sur les trois heures précédant l'échéance,
-  convertie en km/h AVANT les statistiques d'ensemble. Pas un maximum depuis
-  le run. H+0 indisponible. Conventions vérifiées : `config/interval-fields.md`.
+- Rafales à 10 m : norme U/V sur la période disponible (1 heure à H+1,
+  2 heures à H+2, puis les 3 heures précédentes), convertie en km/h AVANT les
+  statistiques d'ensemble. H+0 indisponible. Conventions vérifiées :
+  `config/interval-fields.md`.
 - 384 cartes SVG : 7 paramètres, 4 statistiques, 2 domaines et 7 échéances,
   sauf les rafales à H+0. Marges blanches réduites.
 

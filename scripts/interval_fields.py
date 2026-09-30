@@ -14,16 +14,18 @@ INTERVAL_SIGNATURES={
 def matching_interval(row,field,step):
     if step==0 or row['template']!=11:return False
     if field.startswith('gust_'):
+        duration=min(3,step)
         return (row.get('statistical_process')==2 and row.get('range_unit')==1
-                and row.get('range_length')==3 and row['lead']==step-3)
+                and row.get('range_length')==duration and row['lead']==step-duration)
     return (row.get('statistical_process')==1 and row.get('range_unit')==1
             and row.get('range_length')==step and row['lead']==0)
 
 def validate_interval(handle,get,field,step):
     gust=field.startswith('gust_')
+    duration=min(3,step) if gust else step
     expected={'productDefinitionTemplateNumber':11,'typeOfStatisticalProcessing':2 if gust else 1,
-        'startStep':step-3 if gust else 0,'endStep':step,'indicatorOfUnitForTimeRange':1,
-        'lengthOfTimeRange':3 if gust else step,'stepType':'max' if gust else 'accum'}
+        'startStep':step-duration if gust else 0,'endStep':step,'indicatorOfUnitForTimeRange':1,
+        'lengthOfTimeRange':duration,'stepType':'max' if gust else 'accum'}
     for key,value in expected.items():
         if get(handle,key)!=value:raise ValueError(f'Intervalle {field} incohérent: {key}')
     units=get(handle,'units')
