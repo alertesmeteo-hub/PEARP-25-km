@@ -14,7 +14,7 @@ INTERVAL_SIGNATURES={
 def matching_interval(row,field,step):
     if step==0 or row['template']!=11:return False
     if field.startswith('gust_'):
-        duration=min(3,step)
+        duration=1 if step<3 else 3
         return (row.get('statistical_process')==2 and row.get('range_unit')==1
                 and row.get('range_length')==duration and row['lead']==step-duration)
     return (row.get('statistical_process')==1 and row.get('range_unit')==1
@@ -22,7 +22,7 @@ def matching_interval(row,field,step):
 
 def validate_interval(handle,get,field,step):
     gust=field.startswith('gust_')
-    duration=min(3,step) if gust else step
+    duration=(1 if step<3 else 3) if gust else step
     expected={'productDefinitionTemplateNumber':11,'typeOfStatisticalProcessing':2 if gust else 1,
         'startStep':step-duration if gust else 0,'endStep':step,'indicatorOfUnitForTimeRange':1,
         'lengthOfTimeRange':duration,'stepType':'max' if gust else 'accum'}

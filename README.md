@@ -29,8 +29,8 @@ l'API WCS limitée ni du secret configuré pour les tests d'accès.
   vectoriel moyen ; affichage arrondi au palier supérieur de 5 km/h.
 - Précipitations totales depuis le run : quatre composantes (pluie et neige
   stratiformes/convectives), en mm d'équivalent eau. Pas un taux horaire.
-- Rafales à 10 m : norme U/V sur la période disponible (1 heure à H+1,
-  2 heures à H+2, puis les 3 heures précédentes), convertie en km/h AVANT les
+- Rafales à 10 m : norme U/V sur la période disponible (1 heure à H+1 et H+2,
+  puis les 3 heures précédentes), convertie en km/h AVANT les
   statistiques d'ensemble. H+0 indisponible. Conventions vérifiées :
   `config/interval-fields.md`.
 - 384 cartes SVG : 7 paramètres, 4 statistiques, 2 domaines et 7 échéances,

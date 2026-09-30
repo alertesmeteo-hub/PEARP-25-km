@@ -155,7 +155,7 @@ def main():
     (output/'communes.json').write_text(json.dumps(city_list,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
     manifest={'status':'ok','version':'1.3.0','members':35,'run':run_dt.isoformat(),'steps':STEPS,'map_steps':MAP_STEPS,'products':PRODUCTS,'commune_count':len(city_list),
         'generated_at':datetime.now(timezone.utc).isoformat(),'maps':sum(len(results[step]) for step in MAP_STEPS)*4*2,
-        'limitations':'Tableau horaire H+0 à H+102, sans interpolation. Cartes aux 7 échéances principales. Précipitations totales depuis le run, pluie et neige en équivalent eau. Rafales maximales sur la période disponible, une heure à H+1, deux heures à H+2 puis trois heures, indisponibles à H+0.'}
+        'limitations':'Tableau horaire H+0 à H+102, sans interpolation. Cartes aux 7 échéances principales. Précipitations totales depuis le run, pluie et neige en équivalent eau. Rafales maximales sur une heure à H+1 et H+2, puis sur les trois heures précédentes, indisponibles à H+0.'}
     (output/'index.json').write_text(json.dumps(manifest,ensure_ascii=False),encoding='utf-8')
     print(json.dumps(manifest,ensure_ascii=False),flush=True)
 
