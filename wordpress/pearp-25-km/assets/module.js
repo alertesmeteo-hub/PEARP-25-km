@@ -19,7 +19,7 @@ document.querySelectorAll('[data-pearp]').forEach(async (root,index) => {
    const end=Date.parse(manifest.run)+Number(step)*3600000,format=t=>new Date(t).toLocaleString('fr-FR',{timeZone:'Europe/Paris'});
    $('[data-period]').textContent=spec.period?'Période : '+format(spec.period==='run'?Date.parse(manifest.run):end-spec.period*3600000)+' → '+format(end):'Validité : '+format(end);};
   ['region','product','stat','step'].forEach(key=>$('[data-'+key+']').addEventListener('change',refresh));
-  $('[data-zoom]').addEventListener('input',event=>$('[data-map]').style.width='calc(min(100%, 560px, 65vh) * '+Number(event.target.value)+')');refresh();
+  $('[data-zoom]').addEventListener('input',event=>$('[data-map]').style.width='calc(min(100%, 1100px) * '+Number(event.target.value)+')');refresh();
   const cities=await load('communes.json'), list=$('datalist');list.id='pearp-cities-'+index;$('[data-city]').setAttribute('list',list.id);
   const search=()=>{list.replaceChildren();const query=$('[data-city]').value.toLocaleLowerCase('fr');if(query.length<2)return;cities.filter(c=>(c[1]+' '+c[0]).toLocaleLowerCase('fr').includes(query)).slice(0,40).forEach(c=>add(list,c[1]+' ('+c[0]+')',c[1]+' ('+c[0]+')'));};
   $('[data-city]').addEventListener('input',search);
