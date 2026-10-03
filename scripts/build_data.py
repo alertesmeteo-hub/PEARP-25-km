@@ -11,7 +11,7 @@ from eccodes import codes_new_from_message,codes_get,codes_get_values,codes_rele
 from public_source import CATALOG,inventory,read_range,complete_catalog
 from ensemble import statistics
 from render_maps import PRODUCTS,REGIONS,render
-from interval_fields import INTERVAL_SIGNATURES,matching_interval,validate_interval,precipitation_total,gust_speed
+from interval_fields import INTERVAL_SIGNATURES,matching_interval,validate_interval,precipitation_total,gust_speed,gust_duration
 
 STEPS=list(range(103))
 MAP_STEPS=[0,24,48,72,84,96,102]
@@ -42,13 +42,14 @@ def extract_step(run,step,resource):
         index=inventory(resource);cache.write_text(json.dumps(index))
     if not index['complete']:raise ValueError('Inventaire incomplet')
     chosen=[]
+    gust_window=gust_duration(index['messages'],step) if step else None
     signatures={**SIGNATURES,**(INTERVAL_SIGNATURES if step else {})}
     for row in index['messages']:
         if row['discipline']!=0 or row['level_scale']!=0:continue
         for field,signature in signatures.items():
             if tuple(row[k] for k in ('category','parameter','level_type','level_value'))==signature:
                 if field in INTERVAL_SIGNATURES:
-                    if not matching_interval(row,field,step):continue
+                    if not matching_interval(row,field,step,gust_window):continue
                 elif row['template']!=1 or row['lead']!=step:continue
                 if row['run']!=run or row['time_unit']!=1 or row.get('ensemble_size')!=35:
                     raise ValueError('Métadonnées incohérentes')
@@ -69,7 +70,7 @@ def extract_step(run,step,resource):
                 'jDirectionIncrementInDegrees':.25,'jScansPositively':0,'iScansNegatively':0,
                 'jPointsAreConsecutive':0,'alternativeRowScanning':0,
                 'perturbationNumber':row['member'],'endStep':step}
-            if field in INTERVAL_SIGNATURES:validate_interval(handle,codes_get,field,step)
+            if field in INTERVAL_SIGNATURES:validate_interval(handle,codes_get,field,step,gust_window)
             else:expected['startStep']=step
             for key,value in expected.items():
                 if codes_get(handle,key)!=value:raise ValueError(f'Grille ou échéance invalide: {key}')
