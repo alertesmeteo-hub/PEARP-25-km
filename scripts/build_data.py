@@ -54,8 +54,12 @@ def extract_step(run,step,resource):
                 if row['run']!=run or row['time_unit']!=1 or row.get('ensemble_size')!=35:
                     raise ValueError('Métadonnées incohérentes')
                 chosen.append((field,row))
-    for field in signatures:
+    for field in list(signatures):
         selected=[r['member'] for f,r in chosen if f==field]
+        # Au-delà de H+48 Météo-France publie des fichiers réduits (vent 10 m et pression seulement) :
+        # un champ totalement absent est ignoré, un champ partiel reste une erreur.
+        if not selected and step>48:
+            signatures.pop(field);continue
         if sorted(selected)!=list(range(35)):raise ValueError(f'{field}: 35 membres uniques requis à H+{step}')
     members={field:{} for field in signatures}
     session=requests.Session()
@@ -92,10 +96,13 @@ def extract_step(run,step,resource):
                 if values.min()<0 or values.max()>150:raise ValueError('Pourcentage invalide')
             members[field][row['member']]=values.astype(np.float32)
         finally:codes_release(handle)
-    members['vent']={i:np.hypot(members['u'][i],members['v'][i])*3.6 for i in range(35)}
+    if 'u' in members and 'v' in members:
+        members['vent']={i:np.hypot(members['u'][i],members['v'][i])*3.6 for i in range(35)}
     if step:
-        members['precipitation']={i:precipitation_total([members[key][i] for key in ('rain_conv','rain_large','snow_conv','snow_large')]) for i in range(35)}
-        members['rafales']={i:gust_speed(members['gust_u'][i],members['gust_v'][i]) for i in range(35)}
+        if all(key in members for key in ('rain_conv','rain_large','snow_conv','snow_large')):
+            members['precipitation']={i:precipitation_total([members[key][i] for key in ('rain_conv','rain_large','snow_conv','snow_large')]) for i in range(35)}
+        if 'gust_u' in members and 'gust_v' in members:
+            members['rafales']={i:gust_speed(members['gust_u'][i],members['gust_v'][i]) for i in range(35)}
     else:members['precipitation']={i:np.zeros_like(members['temperature'][i]) for i in range(35)}
     result={product:statistics(members[product]) for product in PRODUCTS if product in members}
     print(f'H+{step}: {len(result)} produits, 35 membres validés',flush=True)
