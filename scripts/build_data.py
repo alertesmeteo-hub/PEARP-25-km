@@ -135,7 +135,9 @@ def main():
             departments.setdefault(c[2],[]).append(c)
     if len(departments)!=96 or sum(map(len,departments.values()))<34000:raise ValueError('Catalogue France incomplet')
     reference_schema=json.loads(Path('config/reference-schema.json').read_text())
-    schema=[reference_schema[index] for index in (0,1,3,4,6,7,12)]
+    # le schéma de référence est un dictionnaire (points, communes, values) : seules les colonnes de valeurs PEARP sont conservées
+    schema_values=[reference_schema['values'][index] for index in (0,1,3,4,6,7,12)]
+    schema={**reference_schema,'values':schema_values}
     (output/'departements').mkdir(exist_ok=True)
     city_list=[]
     for dep,cities in departments.items():
@@ -152,7 +154,7 @@ def main():
             for step in STEPS:
                 values=[]
                 for iy,ix in lookup:
-                    row=[None]*len(schema)
+                    row=[None]*len(schema_values)
                     for product,spec in PRODUCTS.items():
                         if product in results[step]:row[spec['column']]=round(float(results[step][product][stat][iy,ix]),2)
                     values.append(row)
