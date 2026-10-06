@@ -137,7 +137,6 @@ def main():
     reference_schema=json.loads(Path('config/reference-schema.json').read_text())
     # le schéma de référence est un dictionnaire (points, communes, values) : seules les colonnes de valeurs PEARP sont conservées
     schema_values=[reference_schema['values'][index] for index in (0,1,3,4,6,7,12)]
-    schema={**reference_schema,'values':schema_values}
     (output/'departements').mkdir(exist_ok=True)
     city_list=[]
     for dep,cities in departments.items():
@@ -160,7 +159,7 @@ def main():
                     values.append(row)
                 forecast.append([(run_dt+timedelta(hours=step)).isoformat(),values])
             forecasts[stat]=forecast
-        payload={'schema_version':5,'columns':schema,'department':dep,'points':points,'communes':rows,'forecast':forecasts['mean'],'forecast_statistics':{key:value for key,value in forecasts.items() if key!='mean'},'statistic':'mean','members':35}
+        payload={'schema_version':5,'columns':schema_values,'department':dep,'points':points,'communes':rows,'forecast':forecasts['mean'],'forecast_statistics':{key:value for key,value in forecasts.items() if key!='mean'},'statistic':'mean','members':35}
         (output/'departements'/f'{dep}.json').write_text(json.dumps(payload,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
     (output/'communes.json').write_text(json.dumps(city_list,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
     manifest={'status':'ok','version':'1.3.0','members':35,'run':run_dt.isoformat(),'steps':STEPS,'map_steps':MAP_STEPS,'products':PRODUCTS,'commune_count':len(city_list),
