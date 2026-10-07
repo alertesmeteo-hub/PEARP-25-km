@@ -32,24 +32,34 @@ def complete_catalog(resources):
             result.append({'title':key.rsplit('/',1)[1],'url':HOST+key,'filesize':int(item.findtext('s:Size',namespaces=ns))})
     return result
 
+ATTEMPTS=8
+def wait_seconds(attempt,retry_after=None):
+    # 15 s, 30 s, 60 s, 120 s, 240 s puis 300 s ; la source peut imposer plus via Retry-After.
+    base=min(300,15*2**attempt)
+    try:return max(base,int(retry_after)) if retry_after else base
+    except ValueError:return base
+
 def read_range(session,url,start,count,total):
     if not url.startswith(HOST):raise ValueError('Untrusted GRIB host')
     end=min(start+count,total)-1
-    for attempt in range(4):
+    for attempt in range(ATTEMPTS):
         try:
             with session.get(url,headers={'Range':f'bytes={start}-{end}'},stream=True,timeout=(15,60)) as r:
                 if r.status_code in (429,500,502,503,504):
-                    if attempt==3:raise ValueError(f'Public source unavailable: HTTP {r.status_code}')
-                    time.sleep(15*(attempt+1));continue
+                    if attempt==ATTEMPTS-1:raise ValueError(f'Public source unavailable: HTTP {r.status_code}')
+                    delay=wait_seconds(attempt,r.headers.get('Retry-After'))
+                    print(f'HTTP {r.status_code} de la source, reprise dans {delay} s.',flush=True)
+                    time.sleep(delay);continue
                 if r.status_code!=206 or r.headers.get('Content-Range')!=f'bytes {start}-{end}/{total}':
                     raise ValueError(f'Invalid range response: HTTP {r.status_code}')
                 data=r.raw.read(end-start+2)
             if len(data)!=end-start+1:raise ProtocolError('Truncated range')
             return data
         except (requests.RequestException,OSError,ProtocolError) as error:
-            if attempt==3:raise ValueError('Public source unavailable after four attempts') from error
-            print(f'Connexion source interrompue, reprise dans {15*(attempt+1)} s.',flush=True)
-            time.sleep(15*(attempt+1))
+            if attempt==ATTEMPTS-1:raise ValueError(f'Public source unavailable after {ATTEMPTS} attempts') from error
+            delay=wait_seconds(attempt)
+            print(f'Connexion source interrompue, reprise dans {delay} s.',flush=True)
+            time.sleep(delay)
     raise ValueError('Public source unavailable')
 
 def metadata(header):

@@ -108,6 +108,22 @@ def extract_step(run,step,resource):
     print(f'H+{step}: {len(result)} produits, 35 membres validés',flush=True)
     return result
 
+CACHE=Path('build/cache')
+def cached_step(run,step,resource):
+    """Résultat d'une échéance conservé sur disque (par run) : une tentative suivante ne refait que les échéances manquantes."""
+    path=CACHE/run/f'{step:03d}.npz'
+    if path.is_file():
+        with np.load(path) as saved:
+            result={}
+            for key in saved.files:
+                product,stat=key.split('|');result.setdefault(product,{})[stat]=saved[key]
+        print(f'H+{step}: repris du cache',flush=True)
+        return result
+    result=extract_step(run,step,resource)
+    path.parent.mkdir(parents=True,exist_ok=True)
+    np.savez(path,**{f'{product}|{stat}':values for product,stats in result.items() for stat,values in stats.items()})
+    return result
+
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--output',default='build/data');args=parser.parse_args()
     response=requests.get(CATALOG,timeout=30);response.raise_for_status()
@@ -119,7 +135,7 @@ def main():
     print('Run sélectionné: '+run,flush=True)
     run_dt=datetime.strptime(run,'%Y%m%d%H').replace(tzinfo=timezone.utc)
     with ThreadPoolExecutor(max_workers=8) as executor:
-        futures={h:executor.submit(extract_step,run,h,resources[h]) for h in STEPS}
+        futures={h:executor.submit(cached_step,run,h,resources[h]) for h in STEPS}
         results={h:futures[h].result() for h in STEPS}
     output=Path(args.output);output.mkdir(parents=True,exist_ok=True)
     for step in MAP_STEPS:
