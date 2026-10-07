@@ -19,10 +19,16 @@ for path in departments:
     for city in data['communes']:assert 0<=city[6]<len(data['points'])
     for step,(date,rows) in zip(manifest['steps'],data['forecast']):
         assert len(rows)==len(data['points'])
+        # Au-delà de H+48, Météo-France ne publie entre deux échéances tri-horaires que le vent 10 m et la
+        # pression : les autres produits y sont absents pour tous les points (None), jamais partiellement.
+        reduced=step>48 and step%3!=0
         for row in rows:
             assert len(row)==len(data['columns'])==7
             for product_name,product in manifest['products'].items():
-                if product_name=='rafales' and step==0:assert row[product['column']] is None
-                else:assert isinstance(row[product['column']],(int,float))
+                value=row[product['column']]
+                if product_name=='rafales' and step==0:assert value is None
+                elif product_name in ('vent','pressure'):assert isinstance(value,(int,float))
+                elif reduced:assert value is None,f'{product_name} inattendu à H+{step}'
+                else:assert isinstance(value,(int,float)),f'{product_name} manquant à H+{step}'
 assert count==manifest['commune_count']
 print(f'Publication validée : {count} communes, 96 départements, {manifest["maps"]} cartes vectorielles.')
